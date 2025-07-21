@@ -339,6 +339,23 @@ class DatabaseService {
     }
     return false;
   }
+  
+    Future<void> updateUser(User user) async {
+    final db = await database;
+
+    await db.update(
+      'users',
+      {
+        'name': user.name,
+        'email': user.email,
+        'phone': user.phone,
+        'password': user.password,
+      },
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
+  
 }
 
 

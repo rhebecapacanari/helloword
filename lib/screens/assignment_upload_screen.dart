@@ -123,7 +123,16 @@ class _AssignmentUploadScreenState extends State<AssignmentUploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Enviar Trabalho')),
+      appBar: AppBar(iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Enviar Trabalho',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+          backgroundColor: const Color.fromARGB(255, 183, 59, 98),
+        ),
+       backgroundColor: const Color.fromARGB(255, 166, 116, 150),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -135,7 +144,10 @@ class _AssignmentUploadScreenState extends State<AssignmentUploadScreen> {
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Título do Trabalho*',
-                  border: OutlineInputBorder(),
+                   labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), 
+                ),
                 ),
                 validator:
                     (value) =>
@@ -147,15 +159,18 @@ class _AssignmentUploadScreenState extends State<AssignmentUploadScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Descrição (Opcional)',
-                  border: OutlineInputBorder(),
+                  labelText: 'Descrição (Opcional)', 
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), 
+                  ),
                 ),
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
               Text(
                 'Arquivo do Trabalho*',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 8),
               if (_fileName != null) ...[
@@ -169,6 +184,8 @@ class _AssignmentUploadScreenState extends State<AssignmentUploadScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitAssignment,
                 style: ElevatedButton.styleFrom(
+                   backgroundColor: const Color.fromARGB(255, 210, 198, 33),
+                        foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child:

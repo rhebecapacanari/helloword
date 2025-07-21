@@ -79,60 +79,73 @@ _myEnrollments = await _enrollmentService.getStudentEnrollments(widget.student.i
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bem-vindo, Aluno'),
-        backgroundColor: const Color.fromARGB(255, 23, 61, 131),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(child: Text(_errorMessage))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Aulas Disponíveis:',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ..._availableClasses.map((classItem) {
-                        final isEnrolled = _myEnrollments.any((e) => e.classId == classItem.id);
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text(classItem.className),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${classItem.dayOfWeek} - ${DateFormat('dd/MM').format(classItem.date)}'),
-                                Text('Horário: ${_formatTime(classItem.startTime)}'),
-                                if (classItem.description != null)
-                                  Text('Descrição: ${classItem.description!}')
-                              ],
-                            ),
-                            trailing: isEnrolled
-                                ? const Text(
-                                    'Matriculado',
-                                    style: TextStyle(color: Colors.green),
-                                  )
-                                : ElevatedButton(
-                                    onPressed: () => _enrollInClass(classItem.id),
-                                    child: const Text('Matricular'),
-                                  ),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+        backgroundColor: const Color.fromARGB(255, 166, 116, 150),
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 183, 59, 98),
+           iconTheme: const IconThemeData(color: Colors.white), 
+          title: const Text(
+            'MATRICULAR EM AULAS',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage.isNotEmpty
+                ? Center(child: Text(_errorMessage))
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Aulas Disponíveis:',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                        );
-                      }).toList(),
-                    ],
+                        ),
+                        const SizedBox(height: 16),
+                        ..._availableClasses.map((classItem) {
+                          final isEnrolled = _myEnrollments.any((e) => e.classId == classItem.id);
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              title: Text(classItem.className),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${classItem.dayOfWeek} - ${DateFormat('dd/MM').format(classItem.date)}'),
+                                  Text('Horário: ${_formatTime(classItem.startTime)}'),
+                                  if (classItem.description != null)
+                                    Text('Descrição: ${classItem.description!}')
+                                ],
+                              ),
+                              trailing: isEnrolled
+                                  ? const Text(
+                                      'Matriculado',
+                                      style: TextStyle(color: Colors.green),
+                                    )
+                                  : ElevatedButton(
+                                      onPressed: () => _enrollInClass(classItem.id),
+                                      child: const Text('Matricular'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(255, 210, 198, 33),
+                                          foregroundColor: Colors.black,
+                                    ),
+                                  )
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
                   ),
-                ),
-    );
-  }
+      );
+}
 }
