@@ -1,4 +1,6 @@
 import 'package:escoladeingles/main.dart';
+import 'package:escoladeingles/models/user_model.dart';
+import 'package:escoladeingles/screens/ReportCardScreen.dart';
 import 'package:escoladeingles/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -692,10 +694,20 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(
-              icon: const Icon(Icons.school, color: Colors.white),
-              onPressed: () {},
-            ),
+        IconButton(
+  icon: const Icon(Icons.school, color: Colors.white),
+ onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ReportCardScreen(user: widget.teacher),
+    ),
+  );
+}
+
+
+
+),
             IconButton(icon: const Icon(Icons.home, color: Colors.white), onPressed: () {}),
             IconButton(
             icon: const Icon(Icons.person,color: Colors.white),

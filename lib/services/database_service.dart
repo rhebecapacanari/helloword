@@ -26,11 +26,11 @@ class DatabaseService {
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), 'english_school.db');
     return await openDatabase(
-      path,
-      version: 5, 
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+  path,
+  version: 6,
+  onCreate: _onCreate,
+  onUpgrade: _onUpgrade,
+  );
   }
 
 
@@ -74,21 +74,37 @@ class DatabaseService {
         )
       ''');
     }
+
+    if (oldVersion < 6) {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS attendance_grades(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        classId TEXT NOT NULL,
+        studentId INTEGER NOT NULL,
+        isPresent INTEGER NOT NULL,
+        grade TEXT,
+        UNIQUE(classId, studentId),
+        FOREIGN KEY (classId) REFERENCES class_schedules(id),
+        FOREIGN KEY (studentId) REFERENCES students(userId)
+      )
+    ''');
+  }
   }
 
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        type TEXT NOT NULL,
-        isApproved INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
+    CREATE TABLE attendance_grades(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    classId TEXT NOT NULL,
+    studentId INTEGER NOT NULL,
+    isPresent INTEGER NOT NULL,
+    grade TEXT,
+    UNIQUE(classId, studentId),
+    FOREIGN KEY (classId) REFERENCES class_schedules(id),
+    FOREIGN KEY (studentId) REFERENCES students(userId)
+  )
+  ''');
 
 
     await db.execute('''
@@ -212,13 +228,14 @@ class DatabaseService {
 
   
   Future<int> enrollStudent(ClassEnrollment enrollment) async {
-    final db = await database;
-    return await db.insert(
-      'class_enrollments',
-      enrollment.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
+  final db = await database;
+  return await db.insert(
+    'class_enrollments',
+    enrollment.toMap(),
+    conflictAlgorithm: ConflictAlgorithm.replace, 
+  );
+}
+
 
 
   Future<bool> enrollStudentMat(String classId, String studentId) async {
@@ -356,6 +373,97 @@ class DatabaseService {
     );
   }
   
+  Future<List<Student>> getStudentsByClassId(String classId) async {
+  final db = await database;
+
+  final enrollments = await db.query(
+    'class_enrollments',
+    where: 'classId = ? AND status = ?',
+    whereArgs: [classId, 'active'],
+  );
+
+  if (enrollments.isEmpty) return [];
+
+  final studentIds = enrollments.map((e) => e['studentId'] as int).toList();
+
+  final result = await db.rawQuery('''
+    SELECT s.*, u.name FROM students s
+    INNER JOIN users u ON s.userId = u.id
+    WHERE s.userId IN (${List.filled(studentIds.length, '?').join(',')})
+  ''', studentIds);
+
+  return result.map((map) => Student.fromMap(map)).toList();
+}
+
+
+Future<void> upsertAttendanceGrade({
+  required String classId,
+  required int studentId,
+  required bool isPresent,
+  required String grade,
+}) async {
+  final db = await database;
+
+  int updated = await db.update(
+    'attendance_grades',
+    {
+      'isPresent': isPresent ? 1 : 0,
+      'grade': grade,
+    },
+    where: 'classId = ? AND studentId = ?',
+    whereArgs: [classId, studentId],
+  );
+
+  if (updated == 0) {
+    await db.insert('attendance_grades', {
+      'classId': classId,
+      'studentId': studentId,
+      'isPresent': isPresent ? 1 : 0,
+      'grade': grade,
+    });
+  }
+}
+
+Future<Map<int, Map<String, dynamic>>> getAttendanceGradesByClass(String classId) async {
+  final db = await database;
+
+  final results = await db.query(
+    'attendance_grades',
+    where: 'classId = ?',
+    whereArgs: [classId],
+  );
+
+  return {
+    for (var row in results)
+      row['studentId'] as int: {
+        'isPresent': (row['isPresent'] as int) == 1,
+        'grade': row['grade'] as String? ?? '',
+      }
+  };
+}
+
+Future<Map<String, dynamic>?> getAttendanceGrade({
+  required String classId,
+  required int studentId,
+}) async {
+  final db = await database;
+
+  final result = await db.query(
+    'attendance_grades',
+    where: 'classId = ? AND studentId = ?',
+    whereArgs: [classId, studentId],
+    limit: 1,
+  );
+
+  if (result.isEmpty) return null;
+
+  final row = result.first;
+  return {
+    'isPresent': (row['isPresent'] as int) == 1,
+    'grade': row['grade'] as String? ?? '',
+  };
+}
+
 }
 
 
