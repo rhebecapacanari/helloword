@@ -1,5 +1,6 @@
 import 'package:escoladeingles/main.dart';
 import 'package:escoladeingles/screens/ReportCardScreen.dart';
+import 'package:escoladeingles/screens/student_report_export_screen.dart';
 import 'package:escoladeingles/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -189,20 +190,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     
     final classItem = _enrolledClasses.first;
 
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => AssignmentUploadScreen(
-              studentId: widget.student.id.toString(),
-              studentName: widget.student.name,
-              classId: classItem.id,
-              className: classItem.className,
-              teacherId: classItem.teacherId,
-            ),
-      ),
-    );
   }
 
 
@@ -231,32 +218,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _loadEnrolledClasses,
           ),
-        
-
-          /*PopupMenuButton<String>(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onSelected: (String result) {
-              switch (result) {
-                case 'logout':
-                  _logout(context);
-                  break;
-                case 'profile':
-                  _showProfile(context);
-                  break;
-              }
-            },
-            itemBuilder:
-                (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'profile',
-                    child: Text('Meu Perfil'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'logout',
-                    child: Text('Sair'),
-                  ),
-                ],
-          ),*/
          Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -295,6 +256,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   );
                 },
               ),
+             ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('Exportar Boletim'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                       builder: (context) => StudentReportCardScreen(user: widget.student),
+                    ),
+                  );
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: const Text('Sair'),
@@ -308,14 +281,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ],
           ),
         ),
-
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 210, 198, 33),
-                          foregroundColor: Colors.black,
-        onPressed: () => _navigateToAssignmentUpload(context),
-        child: const Icon(Icons.upload_file),
-        tooltip: 'Enviar Trabalho',
-      ),
       body: Column(
   children: [
     const SizedBox(height: 40),
@@ -439,6 +404,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               );
               },
             ),
+             IconButton(
+                  icon: const Icon(Icons.note_add, color: Colors.white),
+                  onPressed: () {
+                   Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AssignmentUploadScreen(
+                          user: widget.student,
+                        ),
+                      ),
+                    );
+                },
+                ),
+
             IconButton(icon: const Icon(Icons.home, color: Colors.white), onPressed: () {}),
             IconButton(
   icon: const Icon(Icons.person,color: Colors.white),
@@ -509,14 +488,13 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  
 
   bool _isPasswordVisible = false;
-  
+
   final _databaseService = DatabaseService();
 
   @override
@@ -525,7 +503,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.text = widget.student.name;
     _emailController.text = widget.student.email;
     _phoneController.text = widget.student.phone;
-    _passwordController.text = widget.student.password;
+    
   }
 
   @override
@@ -533,7 +511,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
+    
     super.dispose();
   }
 
@@ -544,7 +522,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
-        password: _passwordController.text.trim(),
+        password: widget.student.password, 
         level: widget.student.level,
         registrationDate: widget.student.registrationDate,
         isApproved: widget.student.isApproved,
@@ -566,9 +544,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar perfil: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao atualizar perfil: $e')));
       }
     }
   }
@@ -608,18 +586,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _nameController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Name', 
-                    labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu nome' : null,
@@ -627,18 +607,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _emailController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Email',
-                     labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu email' : null,
@@ -646,42 +628,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _phoneController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Phone',
-                   labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu telefone' : null,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password',
-                   labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Digite sua senha' : null,
-                ),
+                
                 const SizedBox(height: 40),
                 Center(
                   child: SizedBox(
@@ -690,13 +655,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: ElevatedButton(
                       onPressed: _saveChanges,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 210, 198, 33),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          210,
+                          198,
+                          33,
+                        ),
                         foregroundColor: Colors.black,
                       ),
                       child: const Text(
                         'SAVE',
                         style: TextStyle(
-                            fontSize: 23, fontWeight: FontWeight.bold),
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

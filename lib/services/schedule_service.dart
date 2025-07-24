@@ -2,12 +2,12 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/class_model.dart';
 import '../models/user_model.dart';
-import '../services/database_service.dart'; // Corrigido
+import '../services/database_service.dart'; 
 
 class ScheduleService {
-  final DatabaseService _databaseService = DatabaseService(); // Corrigido
+  final DatabaseService _databaseService = DatabaseService(); 
 
-  // Método para adicionar um horário de aula
+  
   Future<int> addClassSchedule(ClassSchedule classSchedule) async {
     try {
       final existing = await getClassScheduleById(classSchedule.id);
@@ -25,7 +25,7 @@ class ScheduleService {
     }
   }
 
-  // Método para atualizar o horário de aula
+  
   Future<bool> updateClassSchedule(ClassSchedule classSchedule) async {
     try {
       final existing = await getClassScheduleById(classSchedule.id);
@@ -45,7 +45,7 @@ class ScheduleService {
     }
   }
 
-  // Método para excluir um horário de aula
+  
   Future<bool> deleteClassSchedule(String classId) async {
     try {
       final existing = await getClassScheduleById(classId);
@@ -65,14 +65,14 @@ class ScheduleService {
     }
   }
 
-  // Método para buscar as aulas do professor
+  
   Future<List<ClassSchedule>> getTeacherSchedules(String teacherId) async {
     try {
       if (teacherId.isEmpty) {
         throw Exception('ID do professor não pode ser vazio');
       }
 
-      final db = await _databaseService.database; // Correção aqui
+      final db = await _databaseService.database; 
 
       final tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='class_schedules'",
@@ -88,14 +88,14 @@ class ScheduleService {
     }
   }
 
-  // Método para buscar o horário de uma aula por ID
+  
   Future<ClassSchedule?> getClassScheduleById(String classId) async {
     try {
       if (classId.isEmpty) {
         throw Exception('ID do horário não pode ser vazio');
       }
 
-      final db = await _databaseService.database; // Correção aqui
+      final db = await _databaseService.database; 
       final List<Map<String, dynamic>> result = await db.query(
         'class_schedules',
         where: 'id = ?',
@@ -115,11 +115,11 @@ class ScheduleService {
     }
   }
 
-  // Método para buscar as aulas em que o aluno está matriculado
+  
   Future<List<ClassSchedule>> getStudentEnrolledClasses(String studentId) async {
-    final db = await _databaseService.database; // Correção aqui
+    final db = await _databaseService.database; 
 
-    // Buscando as aulas nas quais o aluno está matriculado
+    
     final enrollments = await db.query(
       'class_enrollments',
       where: 'studentId = ? AND status = ?',
@@ -128,10 +128,10 @@ class ScheduleService {
 
     if (enrollments.isEmpty) return [];
 
-    // Pegando os IDs das aulas em que o aluno está matriculado
+    
     final classIds = enrollments.map((e) => e['classId']).toList();
 
-    // Buscando os detalhes dessas aulas
+    
     final classes = await db.query(
       'class_schedules',
       where: 'id IN (${List.filled(classIds.length, '?').join(',')})',

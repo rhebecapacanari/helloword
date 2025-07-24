@@ -15,6 +15,26 @@ class Validators {
 
     return null;
   }
+
+
+  static String? validateEmail(String? email) {
+    if (email == null || email.isEmpty) {
+      return 'Email é obrigatório';
+    }
+
+
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$',
+    );
+
+
+    if (!emailRegex.hasMatch(email)) {
+      return 'Email inválido';
+    }
+
+
+    return null;
+  }
 }
 
 

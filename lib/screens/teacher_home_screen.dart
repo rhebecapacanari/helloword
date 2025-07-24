@@ -1,6 +1,7 @@
 import 'package:escoladeingles/main.dart';
 import 'package:escoladeingles/models/user_model.dart';
 import 'package:escoladeingles/screens/ReportCardScreen.dart';
+import 'package:escoladeingles/screens/assignment_upload_screen.dart';
 import 'package:escoladeingles/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -110,6 +111,27 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     _showClassDialog(isEditing: true);
   }
 
+  String _getDayOfWeekInPortuguese(DateTime date) {
+    switch (date.weekday) {
+      case DateTime.monday:
+        return 'Segunda';
+      case DateTime.tuesday:
+        return 'Terça';
+      case DateTime.wednesday:
+        return 'Quarta';
+      case DateTime.thursday:
+        return 'Quinta';
+      case DateTime.friday:
+        return 'Sexta';
+      case DateTime.saturday:
+        return 'Sábado';
+      case DateTime.sunday:
+        return 'Domingo';
+      default:
+        return '';
+    }
+  }
+
 
   void _showClassDialog({required bool isEditing}) {
     final _formKey = GlobalKey<FormState>();
@@ -119,20 +141,25 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     final _descriptionController = TextEditingController(
       text: isEditing ? _scheduleToEdit?.description ?? '' : '',
     );
-    String _selectedDay = isEditing ? _scheduleToEdit!.dayOfWeek : 'Segunda';
-    TimeOfDay _selectedTime =
-        isEditing
-            ? TimeOfDay(
-              hour: int.parse(_scheduleToEdit!.startTime.split(':')[0]),
-              minute: int.parse(_scheduleToEdit!.startTime.split(':')[1]),
-            )
-            : const TimeOfDay(hour: 9, minute: 0);
-    DateTime _selectedDate =
-        isEditing
-            ? _scheduleToEdit!.date
-            : DateTime.now().add(const Duration(days: 1));
-    List<String> _selectedClasses =
-        isEditing ? List.from(_scheduleToEdit!.classes) : ['A1'];
+
+
+    DateTime _selectedDate = isEditing
+        ? _scheduleToEdit!.date
+        : DateTime.now().add(const Duration(days: 1));
+    String _selectedDay = _getDayOfWeekInPortuguese(_selectedDate);
+
+
+    TimeOfDay _selectedTime = isEditing
+        ? TimeOfDay(
+            hour: int.parse(_scheduleToEdit!.startTime.split(':')[0]),
+            minute: int.parse(_scheduleToEdit!.startTime.split(':')[1]),
+          )
+        : const TimeOfDay(hour: 9, minute: 0);
+
+
+    List<String> _selectedClasses = isEditing
+        ? List.from(_scheduleToEdit!.classes)
+        : ['A1'];
 
 
     final availableClasses = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -140,190 +167,172 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                title: Text(isEditing ? 'Editar Aula' : 'Adicionar Nova Aula'),
-                content: Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: _classNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Nome da Aula*',
-                          ),
-                          validator:
-                              (value) =>
-                                  value!.isEmpty ? 'Campo obrigatório' : null,
-                        ),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Descrição (opcional)',
-                          ),
-                        ),
-                        DropdownButtonFormField<String>(
-                          value: _selectedDay,
-                          items:
-                              ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
-                                  .map(
-                                    (day) => DropdownMenuItem(
-                                      value: day,
-                                      child: Text(day),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged:
-                              (value) => setState(() => _selectedDay = value!),
-                          decoration: const InputDecoration(
-                            labelText: 'Dia da Semana*',
-                          ),
-                        ),
-                        ListTile(
-                          title: const Text('Data da Aula*'),
-                          subtitle: Text(
-                            DateFormat('dd/MM/yyyy').format(_selectedDate),
-                          ),
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(
-                                const Duration(days: 365),
-                              ),
-                            );
-                            if (date != null) {
-                              setState(() => _selectedDate = date);
-                            }
-                          },
-                        ),
-                        ListTile(
-                          title: const Text('Horário*'),
-                          subtitle: Text(_selectedTime.format(context)),
-                          onTap: () async {
-                            final time = await showTimePicker(
-                              context: context,
-                              initialTime: _selectedTime,
-                            );
-                            if (time != null) {
-                              setState(() => _selectedTime = time);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        const Text('Turmas*', style: TextStyle(fontSize: 16)),
-                        Wrap(
-                          spacing: 8,
-                          children:
-                              availableClasses.map((classItem) {
-                                final isSelected = _selectedClasses.contains(
-                                  classItem,
-                                );
-                                return FilterChip(
-                                  label: Text(classItem),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _selectedClasses.add(classItem);
-                                      } else {
-                                        _selectedClasses.remove(classItem);
-                                      }
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                        ),
-                        if (_selectedClasses.isEmpty)
-                          const Text(
-                            'Selecione pelo menos uma turma',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                      ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(isEditing ? 'Editar Aula' : 'Adicionar Nova Aula'),
+            content: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _classNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nome da Aula*',
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? 'Campo obrigatório' : null,
                     ),
-                  ),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Descrição (opcional)',
+                      ),
+                    ),
+                    ListTile(
+                      title: const Text('Data da Aula*'),
+                      subtitle: Text(
+                        DateFormat('dd/MM/yyyy').format(_selectedDate),
+                      ),
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _selectedDate = date;
+                            _selectedDay = _getDayOfWeekInPortuguese(
+                              date,
+                            ); 
+                          });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      title: const Text('Dia da Semana*'),
+                      subtitle: Text(_selectedDay), 
+                    ),
+                    ListTile(
+                      title: const Text('Horário*'),
+                      subtitle: Text(_selectedTime.format(context)),
+                      onTap: () async {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: _selectedTime,
+                        );
+                        if (time != null) {
+                          setState(() => _selectedTime = time);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Turmas*', style: TextStyle(fontSize: 16)),
+                    Wrap(
+                      spacing: 8,
+                      children: availableClasses.map((classItem) {
+                        final isSelected = _selectedClasses.contains(classItem);
+                        return FilterChip(
+                          label: Text(classItem),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedClasses.add(classItem);
+                              } else {
+                                _selectedClasses.remove(classItem);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    if (_selectedClasses.isEmpty)
+                      const Text(
+                        'Selecione pelo menos uma turma',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                  ],
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _scheduleToEdit = null;
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    if (_selectedClasses.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Selecione pelo menos uma turma'),
+                        ),
+                      );
+                      return;
+                    }
+
+
+                    final schedule = ClassSchedule(
+                      id: isEditing
+                          ? _scheduleToEdit!.id
+                          : DateTime.now().millisecondsSinceEpoch.toString(),
+                      teacherId: widget.teacher.id.toString(),
+                      dayOfWeek: _selectedDay,
+                      date: _selectedDate,
+                      startTime:
+                          '${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+                      className: _classNameController.text,
+                      description: _descriptionController.text.isNotEmpty
+                          ? _descriptionController.text
+                          : null,
+                      classes: _selectedClasses,
+                    );
+
+
+                    try {
+                      if (isEditing) {
+                        await _scheduleService.updateClassSchedule(schedule);
+                      } else {
+                        await _scheduleService.addClassSchedule(schedule);
+                      }
+                      await _loadSchedules();
                       _scheduleToEdit = null;
                       Navigator.pop(context);
-                    },
-                    child: const Text('Cancelar'),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        if (_selectedClasses.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Selecione pelo menos uma turma'),
-                            ),
-                          );
-                          return;
-                        }
-
-
-                        final schedule = ClassSchedule(
-                          id:
-                              isEditing
-                                  ? _scheduleToEdit!.id
-                                  : DateTime.now().millisecondsSinceEpoch
-                                      .toString(),
-                          teacherId: widget.teacher.id.toString(),
-                          dayOfWeek: _selectedDay,
-                          date: _selectedDate,
-                          startTime:
-                              '${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}',
-                          className: _classNameController.text,
-                          description:
-                              _descriptionController.text.isNotEmpty
-                                  ? _descriptionController.text
-                                  : null,
-                          classes: _selectedClasses,
-                        );
-
-
-                        try {
-                          if (isEditing) {
-                            await _scheduleService.updateClassSchedule(
-                              schedule,
-                            );
-                          } else {
-                            await _scheduleService.addClassSchedule(schedule);
-                          }
-                          await _loadSchedules();
-                          _scheduleToEdit = null;
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Aula ${isEditing ? 'atualizada' : 'adicionada'} com sucesso!',
-                              ),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Erro ao ${isEditing ? 'atualizar' : 'adicionar'} aula: $e',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    child: Text(isEditing ? 'Atualizar' : 'Salvar'),
-                  ),
-                ],
-              );
-            },
-          ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Aula ${isEditing ? 'atualizada' : 'adicionada'} com sucesso!',
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Erro ao ${isEditing ? 'atualizar' : 'adicionar'} aula: $e',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(isEditing ? 'Atualizar' : 'Salvar'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -704,9 +713,17 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     ),
   );
 }
-
-
-
+),
+ IconButton(
+  icon: const Icon(Icons.note_add, color: Colors.white),
+  onPressed: () {
+    Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => AssignmentUploadScreen(user: widget.teacher),
+  ),
+);
+  },
 ),
             IconButton(icon: const Icon(Icons.home, color: Colors.white), onPressed: () {}),
             IconButton(
@@ -835,14 +852,13 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  
 
   bool _isPasswordVisible = false;
-  
+
   final _databaseService = DatabaseService();
 
   @override
@@ -851,7 +867,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.text = widget.teacher.name;
     _emailController.text = widget.teacher.email;
     _phoneController.text = widget.teacher.phone;
-    _passwordController.text = widget.teacher.password;
+    
   }
 
   @override
@@ -859,7 +875,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
+    
     super.dispose();
   }
 
@@ -870,10 +886,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
-        password: _passwordController.text.trim(),
+        password: widget.teacher.password, 
         classes: widget.teacher.classes,
-       // level: widget.teacher.level,
-        //registrationDate: widget.teacher.registrationDate,
         isApproved: widget.teacher.isApproved,
       );
 
@@ -893,9 +907,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar perfil: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao atualizar perfil: $e')));
       }
     }
   }
@@ -935,18 +949,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _nameController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Name', 
-                    labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu nome' : null,
@@ -954,18 +970,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _emailController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Email',
-                     labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu email' : null,
@@ -973,42 +991,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _phoneController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Phone',
-                   labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value!.isEmpty ? 'Digite seu telefone' : null,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password',
-                   labelStyle: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-                      enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2),
-                      ),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Digite sua senha' : null,
-                ),
+                
                 const SizedBox(height: 40),
                 Center(
                   child: SizedBox(
@@ -1017,13 +1018,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: ElevatedButton(
                       onPressed: _saveChanges,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 210, 198, 33),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          210,
+                          198,
+                          33,
+                        ),
                         foregroundColor: Colors.black,
                       ),
                       child: const Text(
                         'SAVE',
                         style: TextStyle(
-                            fontSize: 23, fontWeight: FontWeight.bold),
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

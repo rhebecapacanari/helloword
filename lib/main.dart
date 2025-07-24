@@ -1,21 +1,20 @@
-import 'package:escoladeingles/models/student_model.dart';
-import 'package:escoladeingles/screens/admin_screen.dart';
-import 'package:escoladeingles/screens/student_enrollment_screen.dart';
-import 'package:escoladeingles/screens/student_home_screen.dart';
-import 'package:escoladeingles/screens/teacher_home_screen.dart';
 import 'package:flutter/material.dart';
+import 'models/student_model.dart';
+import 'screens/admin_screen.dart';
+import 'screens/student_enrollment_screen.dart';
+import 'screens/student_home_screen.dart';
+import 'screens/teacher_home_screen.dart';
 import 'services/database_service.dart';
 import 'services/auth_service.dart';
-import 'services/schedule_service.dart';
 import 'models/user_model.dart';
 import 'models/teacher_model.dart';
-import 'models/class_model.dart';
+import 'utils/validators.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final dbService = DatabaseService();
-  await dbService.database; 
+  await dbService.database;
   runApp(MyApp());
 }
 
@@ -30,7 +29,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => LoginScreen(),
-        '/login': (context) => LoginScreen(), 
+        '/login': (context) => LoginScreen(),
         '/student-home': (context) {
           final student = ModalRoute.of(context)!.settings.arguments as Student;
           return StudentHomeScreen(student: student);
@@ -44,15 +43,13 @@ class MyApp extends StatelessWidget {
           return TeacherHomeScreen(teacher: teacher);
         },
         '/admin': (context) => AdminScreen(),
-        '/register':
-            (context) => RegisterScreen(
-              userType: ModalRoute.of(context)!.settings.arguments as String,
-            ),
+        '/register': (context) => RegisterScreen(
+          userType: ModalRoute.of(context)!.settings.arguments as String,
+        ),
         '/registration-sent': (context) => CadastroEnviadoScreen(),
       },
-      
-      onUnknownRoute:
-          (settings) => MaterialPageRoute(builder: (context) => LoginScreen()),
+      onUnknownRoute: (settings) =>
+          MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
 }
@@ -74,7 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
+    
+    if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
 
 
@@ -109,170 +107,185 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('fotos/fotoprova.jpg', fit: BoxFit.cover),
+            child: Image.asset(
+              'fotos/fotoprova.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
           ),
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 100),
-                    Text(
-                      'HELLO WORLD',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 0.8,
-                      ),
-                    ),
-                    Text(
-                      'ENGLISH SCHOOL',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    Text(
-                      'EMAIL',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(44, 255, 255, 255),
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: TextFormField(
-                        controller: _emailController,
-                        validator:
-                            (value) =>
-                                value!.isEmpty ? 'Digite seu email' : null,
-                        decoration: InputDecoration(
-                          hintText: 'HELLO@EXAMPLE.COM',
-                          border: InputBorder.none,
+              physics: AlwaysScrollableScrollPhysics(),
+              child: Container(
+                
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Form(
+                  
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 60),
+                      Text(
+                        'HELLO WORLD',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 0.8,
                         ),
-                        style: TextStyle(color: Colors.white),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'PASSWORD',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      Text(
+                        'ENGLISH SCHOOL',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(52, 255, 255, 255),
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 40),
+                      Text(
+                        'EMAIL',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        validator:
-                            (value) =>
-                                value!.isEmpty ? 'Digite sua senha' : null,
-                        decoration: InputDecoration(border: InputBorder.none),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 50),
-                    Align(
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: 200,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(
-                              255,
-                              210,
-                              198,
-                              33,
-                            ),
-                            foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(44, 255, 255, 255),
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: TextFormField(
+                          controller: _emailController,
+                          validator: Validators.validateEmail,
+                          decoration: InputDecoration(
+                            hintText: 'HELLO@EXAMPLE.COM',
+                            border: InputBorder.none,
                           ),
-                          child:
-                              _isLoading
-                                  ? CircularProgressIndicator(
-                                    color: Colors.black,
-                                  )
-                                  : Text(
+                          style: TextStyle(color: Colors.white),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'PASSWORD',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(52, 255, 255, 255),
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          validator: (value) =>
+                              value!.isEmpty ? 'Digite sua senha' : null,
+                          decoration: InputDecoration(border: InputBorder.none),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                      Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: 200,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                210,
+                                198,
+                                33,
+                              ),
+                              foregroundColor: const Color.fromARGB(
+                                255,
+                                0,
+                                0,
+                                0,
+                              ),
+                            ),
+                            child: _isLoading
+                                ? CircularProgressIndicator(color: Colors.black)
+                                : Text(
                                     'LOGIN',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Align(
-                      alignment: Alignment.center,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => OpcaoRegistro()),
-                          );
-                        },
-                        child: Text(
-                          'REGISTRAR-SE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 21,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ),
-                    Align(
-                      alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: () {
-                          _tapCount++;
-                          if (_tapCount >= 3) {
+                      const SizedBox(height: 30),
+                      Align(
+                        alignment: Alignment.center,
+                        child: GestureDetector(
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const AdminScreen(),
+                                builder: (_) => OpcaoRegistro(),
                               ),
                             );
-                            _tapCount = 0;
-                          }
-                        },
-                        child: Text(
-                          'Acesso Administrativo',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 16,
+                          },
+                          child: Text(
+                            'REGISTRAR-SE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton(
+                          onPressed: () {
+                            _tapCount++;
+                            if (_tapCount >= 3) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AdminScreen(),
+                                ),
+                              );
+                              _tapCount = 0;
+                            }
+                          },
+                          child: Text(
+                            'Acesso Administrativo',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -288,10 +301,127 @@ class OpcaoRegistro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('fotos/fotoprova.jpg', fit: BoxFit.cover),
+            child: Image.asset(
+              'fotos/fotoprova.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+          SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(top: 150),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Text(
+                      'CADASTRAR-SE',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 80),
+                    child: Text(
+                      'Qual seu tipo de usuário?',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: 300,
+                      height: 70,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/register',
+                            arguments: 'student',
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            240,
+                            153,
+                            39,
+                          ),
+                          foregroundColor: const Color.fromARGB(
+                            255,
+                            255,
+                            255,
+                            255,
+                          ),
+                        ),
+                        child: Text(
+                          'SOU ALUNO',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: 300,
+                      height: 70,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/register',
+                            arguments: 'teacher',
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            240,
+                            153,
+                            39,
+                          ),
+                          foregroundColor: const Color.fromARGB(
+                            255,
+                            255,
+                            255,
+                            255,
+                          ),
+                        ),
+                        child: Text(
+                          'SOU PROFESSOR(A)',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                ],
+              ),
+            ),
           ),
           Positioned(
             top: 40,
@@ -299,114 +429,6 @@ class OpcaoRegistro extends StatelessWidget {
             child: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 150),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    'CADASTRAR-SE',
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 80),
-                  child: Text(
-                    'Qual seu tipo de usuário?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: 300,
-                    height: 70,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/register',
-                          arguments: 'student',
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          240,
-                          153,
-                          39,
-                        ),
-                        foregroundColor: const Color.fromARGB(
-                          255,
-                          255,
-                          255,
-                          255,
-                        ),
-                      ),
-                      child: Text(
-                        'SOU ALUNO',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: 300,
-                    height: 70,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/register',
-                          arguments: 'teacher',
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          240,
-                          153,
-                          39,
-                        ),
-                        foregroundColor: const Color.fromARGB(
-                          255,
-                          255,
-                          255,
-                          255,
-                        ),
-                      ),
-                      child: Text(
-                        'SOU PROFESSOR(A)',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -470,179 +492,196 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('fotos/fotoprova.jpg', fit: BoxFit.cover),
-          ),
-          Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 100),
-                        Text(
-                          'CADASTRAR-SE',
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        Text(
-                          'NOME',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(44, 255, 255, 255),
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: TextFormField(
-                            controller: _nameController,
-                            validator:
-                                (value) =>
-                                    value!.isEmpty ? 'Digite seu nome' : null,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                            ),
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    'EMAIL',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(44, 255, 255, 255),
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: TextFormField(
-                      controller: _emailController,
-                      validator:
-                          (value) => value!.isEmpty ? 'Digite seu email' : null,
-                      decoration: InputDecoration(border: InputBorder.none),
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'TELEFONE',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(44, 255, 255, 255),
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: TextFormField(
-                      controller: _phoneController,
-                      validator:
-                          (value) =>
-                              value!.isEmpty ? 'Digite seu telefone' : null,
-                      decoration: InputDecoration(border: InputBorder.none),
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'SENHA',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(44, 255, 255, 255),
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      validator:
-                          (value) => value!.isEmpty ? 'Digite sua senha' : null,
-                      decoration: InputDecoration(border: InputBorder.none),
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 80),
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 250,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            210,
-                            198,
-                            33,
-                          ),
-                          foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                        ),
-                        child:
-                            _isLoading
-                                ? CircularProgressIndicator(color: Colors.black)
-                                : Text(
-                                  'CADASTRE-SE',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                      ),
-                    ),
-                  ),
-                ],
+      resizeToAvoidBottomInset: false,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'fotos/fotoprova.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
             ),
-          ),
-        ],
+            SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 60),
+                            Text(
+                              'CADASTRAR-SE',
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+                            Text(
+                              'NOME',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(44, 255, 255, 255),
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: TextFormField(
+                                controller: _nameController,
+                                validator: (value) =>
+                                    value!.isEmpty ? 'Digite seu nome' : null,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                ),
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'EMAIL',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(44, 255, 255, 255),
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: TextFormField(
+                          controller: _emailController,
+                          validator: Validators.validateEmail,
+                          decoration: InputDecoration(border: InputBorder.none),
+                          style: TextStyle(color: Colors.white),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'TELEFONE',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(44, 255, 255, 255),
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: TextFormField(
+                          controller: _phoneController,
+                          validator: Validators.validatePhone,
+                          decoration: InputDecoration(border: InputBorder.none),
+                          style: TextStyle(color: Colors.white),
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'SENHA',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(44, 255, 255, 255),
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          validator: (value) =>
+                              value!.isEmpty ? 'Digite sua senha' : null,
+                          decoration: InputDecoration(border: InputBorder.none),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                      Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: 250,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _register,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                210,
+                                198,
+                                33,
+                              ),
+                              foregroundColor: const Color.fromARGB(
+                                255,
+                                0,
+                                0,
+                                0,
+                              ),
+                            ),
+                            child: _isLoading
+                                ? CircularProgressIndicator(color: Colors.black)
+                                : Text(
+                                    'CADASTRE-SE',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              left: 20,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -653,65 +692,78 @@ class CadastroEnviadoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('fotos/fotoprova.jpg', fit: BoxFit.cover),
+            child: Image.asset(
+              'fotos/fotoprova.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
           ),
           Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  margin: const EdgeInsets.symmetric(horizontal: 30),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.symmetric(horizontal: 30),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Seu cadastro foi enviado para análise.\n'
+                      'Você será notificado assim que for aprovado.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  child: Text(
-                    'Seu cadastro foi enviado para análise.\n'
-                    'Você será notificado assim que for aprovado.',
+                  const SizedBox(height: 30),
+                  Text(
+                    'THANKS!!!',
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
+                      fontSize: 30,
+                      color: const Color.fromARGB(255, 255, 255, 255),
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 30),
-                Text(
-                  'THANKS!!!',
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 90),
-                SizedBox(
-                  width: 250,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 210, 198, 33),
-                      foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                    ),
-                    child: Text(
-                      'OKAY',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                  const SizedBox(height: 90),
+                  SizedBox(
+                    width: 250,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          210,
+                          198,
+                          33,
+                        ),
+                        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+                      ),
+                      child: Text(
+                        'OKAY',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                ],
+              ),
             ),
           ),
         ],
@@ -783,6 +835,5 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
 
 
